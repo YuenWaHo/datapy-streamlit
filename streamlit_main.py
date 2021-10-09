@@ -77,7 +77,7 @@ def page_home():
 def page_settings():
     # Sidebar
     st.sidebar.subheader('Query parameters')
-    start_date = st.sidebar.date_input("Start date", datetime.date(2015, 1, 1))
+    start_date = st.sidebar.date_input("Start date", datetime.date(2020, 1, 1))
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
     # Retrieving tickers data
@@ -85,6 +85,7 @@ def page_settings():
         ticker_list = pd.read_csv('prediction_list.txt')
     else:
         ticker_list = pd.read_csv('prediction_list_trial.txt')
+    # ticker_list = pd.read_csv('prediction_list.txt')
     ticket_list = ticker_list.sort_values('Stock', ascending=True, axis=0, inplace=True)
     tickerSymbol = st.sidebar.selectbox('Stock Ticker Symbol', ticker_list['Stock']) # Select ticker symbol
     tickerData = yf.Ticker(tickerSymbol) # Get ticker data

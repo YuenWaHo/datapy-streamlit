@@ -75,13 +75,14 @@ def page_home():
 
 
 def page_settings():
+    user_status = page_home()
     # Sidebar
     st.sidebar.subheader('Query parameters')
     start_date = st.sidebar.date_input("Start date", datetime.date(2020, 1, 1))
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
     # Retrieving tickers data
-    if page_home() == True:
+    if user_status == True:
         ticker_list = pd.read_csv('prediction_list.txt')
     else:
         ticker_list = pd.read_csv('prediction_list_trial.txt')
@@ -104,9 +105,6 @@ def page_settings():
     string_logo = '<img src=%s>' % tickerData.info['logo_url']
     col2.markdown(string_logo, unsafe_allow_html=True)
 
-    string_summary = tickerData.info['longBusinessSummary']
-    st.info(string_summary)
-    st.write('---')
     # Volatility Prediction
     st.header('**Volatility Backtest Result**')
     vol_backtest_df = pd.read_csv('backtest_summary.csv')
@@ -119,11 +117,6 @@ def page_settings():
     # Ticker data
     st.header('**Ticker data**')
     st.write(tickerDf.tail(5))
-
-    st.header('**Stock Price**')
-    qf=cf.QuantFig(tickerDf,title='Stock Price Figure',legend='top',name='GS')
-    fig = qf.iplot(asFigure=True)
-    st.plotly_chart(fig)
 
     # Volatility Prediction
     st.header('**Volatility Prediction (Monthly)**')
@@ -143,6 +136,15 @@ def page_settings():
         st.write(month_vol_df_filtered[['vol_day_start', 'vol_day_end', 'pos_change', 'Type', 'MDD_perc']])
     else:
         st.write('Historic volatility not available.')
+
+    st.header('**Stock Price**')
+    qf=cf.QuantFig(tickerDf,title='Stock Price Figure',legend='top',name='GS')
+    fig = qf.iplot(asFigure=True)
+    st.plotly_chart(fig)
+
+    string_summary = tickerData.info['longBusinessSummary']
+    st.info(string_summary)
+    st.write('---')
 
 if __name__ == "__main__":
     main()

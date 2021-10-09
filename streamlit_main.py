@@ -32,6 +32,11 @@ def main():
 
     pages[page]()
 
+user_list = {
+    'hoyuenwaderek@gmail.com':'sousa326',
+    'urania@gmail.com':'Uran1234',
+    'testing@gmail.com':'testing',
+}
 
 def page_home():
     st.markdown('''
@@ -50,12 +55,6 @@ def page_home():
     - Historic stock price volatility analysis
     ''')
     st.write('---')
-
-    user_list = {
-        'hoyuenwaderek@gmail.com':'sousa326',
-        'urania@gmail.com':'Uran1234',
-        'testing@gmail.com':'testing',
-    }
     
     with st.form(key='my_form'):
         user_name = st.text_input("User email", 'xxx@gmail.com')
@@ -69,8 +68,6 @@ def page_home():
         st.write('logged in')
     else:
         st.write('your username is not registered. Would you like to register?')
-        user_status = False
-    return user_status
 
 def check_login(user_name, user_pw):
     global user_status

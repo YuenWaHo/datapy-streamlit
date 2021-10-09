@@ -66,10 +66,10 @@ def page_home():
     # check username and password entered are correct
     if user_name in user_list and user_pw == user_list[user_name]:
         st.write('logged in')
-        user_status == 1
+        user_status = True
     else:
         st.write('your username is not registered. Would you like to register')
-        user_status == 0
+        user_status = False
 
     
 
@@ -80,7 +80,7 @@ def page_settings():
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
     # Retrieving tickers data
-    if user_status == 1:
+    if user_status == True:
         ticker_list = pd.read_csv('prediction_list.txt')
     else:
         ticker_list = pd.read_csv('prediction_list_trial.txt')

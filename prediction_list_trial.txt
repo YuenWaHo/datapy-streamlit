@@ -1,0 +1,6 @@
+,Stock
+0,AAPL
+1,ODFL
+2,MU
+3,MSFT
+4,AMD

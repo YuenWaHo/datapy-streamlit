@@ -64,6 +64,7 @@ def page_home():
         # strip any whitespace from the ends of the input
     user_name, user_pw = user_name.strip(), user_pw.strip()
     # check username and password entered are correct
+    global user_status
     if user_name in user_list and user_pw == user_list[user_name]:
         st.write('logged in')
         user_status = True

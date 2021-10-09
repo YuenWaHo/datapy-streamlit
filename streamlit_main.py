@@ -52,7 +52,7 @@ def page_home():
     st.write('---')
 
     user_list = {
-        'hoyuenwaderek@gmail.com':'abcd1234',
+        'hoyuenwaderek@gmail.com':'sousa326',
         'urania@gmail.com':'Uran1234'
     }
     
@@ -81,7 +81,7 @@ def page_settings():
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
     # Retrieving tickers data
-    if user_status == True:
+    if page_home() == True:
         ticker_list = pd.read_csv('prediction_list.txt')
     else:
         ticker_list = pd.read_csv('prediction_list_trial.txt')

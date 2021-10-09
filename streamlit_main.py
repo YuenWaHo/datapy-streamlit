@@ -72,10 +72,9 @@ def page_home():
         user_status = False
     return user_status
 
-
+user_status = page_home()
 
 def page_settings():
-    user_status = page_home()
     # Sidebar
     st.sidebar.subheader('Query parameters')
     start_date = st.sidebar.date_input("Start date", datetime.date(2020, 1, 1))

@@ -1,0 +1,5 @@
+streamlit==0.88.0
+yfinance==0.1.63
+pandas==1.2.3
+cufflinks==0.17.3
+datetime

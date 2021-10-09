@@ -53,26 +53,33 @@ def page_home():
 
     user_list = {
         'hoyuenwaderek@gmail.com':'sousa326',
-        'urania@gmail.com':'Uran1234'
+        'urania@gmail.com':'Uran1234',
+        'testing@gmail.com':'testing',
     }
     
     with st.form(key='my_form'):
         user_name = st.text_input("User email", 'xxx@gmail.com')
-        user_pw = st.text_input("Password", 'ABCD1234')
+        user_pw = st.text_input("Password", 'Type in your password')
         submit_button = st.form_submit_button(label='Submit')
 
-        # strip any whitespace from the ends of the input
+    # strip any whitespace from the ends of the input
     user_name, user_pw = user_name.strip(), user_pw.strip()
     # check username and password entered are correct
     if user_name in user_list and user_pw == user_list[user_name]:
         st.write('logged in')
-        user_status = True
     else:
         st.write('your username is not registered. Would you like to register?')
         user_status = False
     return user_status
 
-user_status = page_home()
+def check_login(user_name, user_pw):
+    global user_status
+    user_name, user_pw = user_name.strip(), user_pw.strip()
+    # check username and password entered are correct
+    if user_name in user_list and user_pw == user_list[user_name]:
+        user_status = True
+    else:
+        user_status = False
 
 def page_settings():
     # Sidebar

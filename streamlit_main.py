@@ -38,6 +38,7 @@ user_list = {
     'testing@gmail.com':'testing',
 }
 
+
 def page_home():
     st.markdown('''
     # Stock Price Volatility Backtesting
@@ -56,27 +57,23 @@ def page_home():
     ''')
     st.write('---')
     
-    with st.form(key='my_form'):
-        user_name = st.text_input("User email", 'xxx@gmail.com')
-        user_pw = st.text_input("Password", 'Type in your password')
-        submit_button = st.form_submit_button(label='Submit')
+    # with st.form(key='my_form'):
+    #     user_name = st.text_input("User email", 'xxx@gmail.com')
+    #     user_pw = st.text_input("Password", 'Type in your password')
+    #     submit_button = st.form_submit_button(label='Submit')
 
-    # strip any whitespace from the ends of the input
-    user_name, user_pw = user_name.strip(), user_pw.strip()
-    # check username and password entered are correct
-    if user_name in user_list and user_pw == user_list[user_name]:
-        st.write('logged in')
-    else:
-        st.write('your username is not registered. Would you like to register?')
-
-def check_login(user_name, user_pw):
-    global user_status
-    user_name, user_pw = user_name.strip(), user_pw.strip()
-    # check username and password entered are correct
-    if user_name in user_list and user_pw == user_list[user_name]:
-        user_status = True
-    else:
-        user_status = False
+    # # strip any whitespace from the ends of the input
+    # user_name, user_pw = user_name.strip(), user_pw.strip()
+    # # check username and password entered are correct
+    # if user_name in user_list and user_pw == user_list[user_name]:
+    #     st.write('logged in')
+    #     if 'loggin_status' not in st.session_state:
+    #         st.session_state['loggin_status'] = 'logged'
+    # else:
+    #     st.write('your username is not registered. Would you like to register?')
+    #     if 'loggin_status' not in st.session_state:
+    #         st.session_state['loggin_status'] = 'friendly'
+    # print(st.session_state['loggin_status'])
 
 def page_settings():
     # Sidebar
@@ -85,11 +82,14 @@ def page_settings():
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
     # Retrieving tickers data
-    if user_status == True:
-        ticker_list = pd.read_csv('prediction_list.txt')
-    else:
-        ticker_list = pd.read_csv('prediction_list_trial.txt')
-    # ticker_list = pd.read_csv('prediction_list.txt')
+    # if st.session_state.loggin_status == 'logged':
+    #     ticker_list = pd.read_csv('prediction_list.txt')
+    # elif st.session_state.loggin_status == 'friendly':
+    #     ticker_list = pd.read_csv('prediction_list_trial.txt')
+    # else:
+    #     pass
+
+    ticker_list = pd.read_csv('prediction_list.txt')
     ticket_list = ticker_list.sort_values('Stock', ascending=True, axis=0, inplace=True)
     tickerSymbol = st.sidebar.selectbox('Stock Ticker Symbol', ticker_list['Stock']) # Select ticker symbol
     tickerData = yf.Ticker(tickerSymbol) # Get ticker data

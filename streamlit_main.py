@@ -6,6 +6,7 @@ import cufflinks as cf
 import datetime
 import pyrebase
 import matplotlib.pyplot as plt
+import option_interest
 
 st.set_page_config(
     page_title="DataPy - Stock Volatility App",
@@ -105,18 +106,19 @@ def gen_backtest_report(df, m_month, perc_str):
 def page_home():
     st.header('Stock Price Volatility Backtesting')
     # Stock Price Volatility Backtesting
-    st.markdown('''
-    - App built by [DataPy](www.youtube.com/channel/UCI7auEnrAG2XAlGjdGN2Gsg)
+    st.write('''
+    - App built by [DataPy](https://www.youtube.com/channel/UCI7auEnrAG2XAlGjdGN2Gsg)
     - Historic stock price volatility analysis
     
     If you are interested in using this stock volatility analysis in gaining consistent profit. 
-    Please contact us for more details.'''
+    Please contact us for more details.''')
     
-    ''' 
-    ### Telegram - [stock_vol](https://t.me/) / WhatsApp: [Whatsapp](https://wa.me/)
-    ''')
+    st.write('[Telegram](https://t.me/) [WhatsApp](https://wa.me/) [Instagram](https://www.instagram.com)')
+
     st.write('---')
-    
+    col1, col2 = st.columns(2)
+
+    col1.markdown(
     '''
     This platform provides stock historical volatility analysis. The calculation is within a specified 
     period (typically the next Monday trailing the end date of the option expiry date to the next option 
@@ -130,30 +132,33 @@ def page_home():
     S&P500 stock (With over 25 years of historical data) were screened and calculated. This trading
     strategy has been backtested for 60 months from Jan-2016 to Dec-2020. Users can screen for high 
     winning probability stock based on the winning rate. A high winning rate stock represent a highly
-     cyclical pattern during a specified period during the year, and hence providing high confidence
-      in capturing the minimum positive increase in stock prices.
+    cyclical pattern during a specified period during the year, and hence providing high confidence
+    in capturing the minimum positive increase in stock prices.''')
 
+    col2.markdown('''
+    本平台提供股票歷史波動率分析。計算在規定的期間內（通常是從期權到期日的下一個星期到下一個期權的到期日）計算過去
+    20 年股價的最低漲幅。目標正增長的範圍包括 100% 範圍（所有 20 年的最小正增長）以及 90% 的範圍（18 年內的最低
+    正增長）。該交易策略捕捉了過去 20 年股票價格的最小正增長，並假設這個最小值今年同期將再次出現上漲幅度。
+
+    這種交易策略需要大量的計算時間來篩選股票價格。 標普500中的305隻股票（具有超過 25 年的歷史數據）。本次交易策略
+    已經從 2016 年 1 月到 2020 年 12 月進行了 60 個月的回測。用戶可以篩選高基於中獎率的中獎概率股票。高贏率股票
+    代表高一年中特定時期的周期性模式，因此提供高置信度捕捉股票價格的最小正增長。
+    ''')
+
+    st.markdown('''
     ## *Example of this trading strategy*
+    A stock investor planned to invest in Apple Inc. (Code: AAPL). The stock volatility strategy
+    calculated that during the period 2021-09-15 yo 2021-10-15, AAPL has a 87% chance of 2.98%
+    increase from 2021-10-01 (Low) to 2021-10-10 (High). On this date, the day low of AAPL was
+    $139.11. Therefore it is predicted that on or before 2021-10-15, the stock price of AAPL will
+    increase by $4.15 (2.98%).
+    ''')
 
-    A stock investor planned to invest in Apple Inc. (Code: AAPL). The stock volatility strategy 
-    calculated that during the period 2021-09-15 yo 2021-10-15, AAPL has a 87% chance of 2.98% 
-    increase from 2021-10-01 (Low) to 2021-10-10 (High). On this date, the day low of AAPL was 
-    $139.11. Therefore it is predicted that on or before 2021-10-15, the stock price of AAPL will 
-    increase by $4.15 (2.98%). 
-    '''
-    
     st.image('AAPL_2021_10_01Example.png')
     st.write('---')
-    # disclaimer_text = []
-    st.markdown("""
-    <style>
-    .small-font {
-        font-size:25px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.markdown('''
-    Disclaimer
+
+    '''
+    ## Disclaimer
     In connection with, and as a condition of, the individual’s participation and usage of data provided 
     by **Datapy-StockVolatility**, the individual confirms, acknowledges and agrees as follows:
 
@@ -174,7 +179,7 @@ def page_home():
     the Presenters at or subsequent to the Event, the undersigned does so at their own risk, and acknowledges
     that **Datapy-StockVolatility has neither responsibility for, nor liability with regards to, any 
     contracts or relationships** entered into between the undersigned and any third party Presenters at the Event.
-    ''')
+    '''
 
 def page_login():
     with st.form(key='my_form'):
@@ -186,11 +191,16 @@ def page_login():
         # try:
             # user = auth.sign_in_with_email_and_password(email,password)
         st.sidebar.write("Login successful!")
-        bio = st.sidebar.radio('Jump to',['Backtest Summary', 'Backtest Results'], key='loggedin')
-        if bio == 'Backtest Summary':
+        bio = st.sidebar.radio('Jump to',['Backtest Summary 回測總結', 'Backtest Results 回測結果', 
+        'Multiple stocks', 'Open Interest 期權資金流'], key='loggedin')
+        if bio == 'Backtest Summary 回測總結':
             backtest_summary('success')
-        elif bio =='Backtest Results':
+        elif bio =='Backtest Results 回測結果':
             page_data('success')
+        elif bio == 'Multiple stocks':
+            page_select_stock('success')
+        elif bio == 'Open Interest 期權資金流':
+            open_interest('success')
         #     page_backtest_results('success')
         # elif bio == 'Data':
         #     page_data('success')
@@ -229,10 +239,7 @@ def page_backtest_results(status):
         st.write('**Backtest Volatility Results**')
         backtest_df = pd.read_csv('dataset/backtest_summary.csv')
         backtest_df = backtest_df[backtest_df['stock'] == (stock_selected)]
-        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank',
-        'TR_rank','Vol_rank','Total_score','EV']]
-        # selected = backtest_df['stock'].isin(stock_selected)
-        # backtest_df = backtest_df[selected]
+        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank', 'TR_rank','Vol_rank','Total_score','EV']]
         st.dataframe(backtest_df)
 
         df = pd.read_csv('backtest_report/{}_20yr_pos_change_backtest.csv'.format(stock_selected))
@@ -312,17 +319,14 @@ def page_data(status):
         st.write(month_vol_df_filtered[['vol_day_start', 'vol_day_end', 'pos_change', 'Type', 'MDD_perc']])
     else:
         st.write('Historic volatility not available.')
-
     # ------------------------------------
     # Print Previous Result
     # ------------------------------------
-    # status == 'success'
     if status == 'success':
         st.write('**Backtest Volatility Results**')
         backtest_df = pd.read_csv('dataset/backtest_summary.csv')
         backtest_df = backtest_df[backtest_df['stock'] == (tickerSymbol)]
         backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank','TR_rank','Vol_rank','Total_score','EV']]
-        # st.dataframe(backtest_df)
 
         df = pd.read_csv('backtest_report/{}_20yr_pos_change_backtest.csv'.format(tickerSymbol))
         st.write('Target Volatility')
@@ -351,6 +355,51 @@ def page_data(status):
     string_summary = tickerData.info['longBusinessSummary']
     st.info(string_summary)
     st.write('---')
+
+def page_select_stock(status):
+    st.write('Page under construction')
+
+def open_interest(status):
+    st.markdown('''
+    # Open Interest 
+    This page provide current open option interest for all avaialble stocks. Please input stock name.
+    ''')
+    col1, col2 = st.columns(2)
+    stock = col1.text_input('Stock', 'AAPL')
+    date = col2.selectbox('# Date', ['2021-11-19', '2021-12-17', '2022-01-21', '2022-02-18', '2022-03-18', '2022-04-14'])
+    stock_value_df = yf.Ticker(stock)
+    opt = stock_value_df.option_chain(date)
+
+    ticker = yf.Ticker(stock)
+    todays_data = ticker.history(period='1d')
+    today_price = todays_data['Close'][0]
+
+    fig, ax = plt.subplots(figsize=(12, 9), dpi=80)
+    opt_final = pd.merge(opt.calls, opt.puts, on='strike')
+    opt_final = opt_final[['strike', 'openInterest_x', 'openInterest_y']]
+    opt_final.columns = ['strike', 'calls', 'puts']
+    opt_final['total'] = opt_final['calls'] + opt_final['puts']
+    opt_final['strike_dif'] = opt_final['strike'].diff()
+
+    # opt_strike_diff = 5 if today_price > 500 else 2 if today_price > 100 else 0.5
+    opt_final = opt_final[(opt_final['strike'] >= today_price *0.8) & (opt_final['strike'] <= today_price *1.2) ]
+    x_lim_max = opt_final['calls'].max() if opt_final['calls'].max() > opt_final['puts'].max() else opt_final['puts'].max()
+    plt.xlim(0, x_lim_max+500)
+    bar_width = 2.5 if today_price > 500 else 0.5 if today_price > 100 else 0.25
+    rects1 = plt.barh(opt_final.strike, opt_final.calls, bar_width, label='Calls')
+    rects2 = plt.barh(opt_final.strike - bar_width, opt_final.puts, bar_width, label='Puts', alpha=0.5)
+
+    plt.hlines(today_price, 0, opt_final.total.max()/2, colors='black', linestyles='dashed', linewidth=2.0, label='Current Price')
+    plt.ylabel('Strike Price', size=15)
+    plt.xlabel('Open Intesest', size=15)
+    today_price_print = round(today_price, 0)
+    strike_range_print = 100 if today_price > 500 else 30 if today_price > 100 else 20
+    plt.ylim(today_price_print-strike_range_print,today_price_print+strike_range_print)
+    plt.yticks(opt_final.strike)
+    plt.legend(prop={'size': 13}, bbox_to_anchor=(1.0, 1), loc='best')
+    ax.set_title(f'{stock} Option Open Interest for {date}', size=18)
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     main()

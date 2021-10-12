@@ -81,7 +81,7 @@ def page_settings():
     start_date = st.sidebar.date_input("Start date", datetime.date(2020, 1, 1))
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
 
-    ticker_list = pd.read_csv('datset/prediction_list.txt')
+    ticker_list = pd.read_csv('dataset/prediction_list.txt')
     ticket_list = ticker_list.sort_values('Stock', ascending=True, axis=0, inplace=True)
     tickerSymbol = st.sidebar.selectbox('Stock Ticker Symbol', ticker_list['Stock']) # Select ticker symbol
     tickerData = yf.Ticker(tickerSymbol) # Get ticker data
@@ -92,7 +92,7 @@ def page_settings():
 
     string_name = tickerData.info['longName']
     string_industry = 'Industry: ' + tickerData.info['industry']
-    string_sector =   'Sector  :' + tickerData.info['sector']
+    string_sector =   'Sector:  ' + tickerData.info['sector']
     col1.header('**%s**' % string_name)
     col1.markdown(string_industry)
     col1.markdown(string_sector)
@@ -102,7 +102,7 @@ def page_settings():
 
     # Volatility Prediction
     st.header('**Volatility Backtest Result**')
-    vol_backtest_df = pd.read_csv('datset/backtest_summary.csv')
+    vol_backtest_df = pd.read_csv('dataset/backtest_summary.csv')
     if ((vol_backtest_df['stock'] == tickerSymbol)).any():
         month_vol_df_filtered = vol_backtest_df[vol_backtest_df['stock'] == tickerSymbol]
         st.write(month_vol_df_filtered[['Win_Rate', 'Min_vol', 'TR_rank', 'Vol_rank', 'Total_score' ,'EV']])
@@ -115,7 +115,7 @@ def page_settings():
 
     # Volatility Prediction
     st.header('**Volatility Prediction (Monthly)**')
-    month_vol_df = pd.read_csv('datset/Monthly_prediction.csv')
+    month_vol_df = pd.read_csv('dataset/Monthly_prediction.csv')
     if ((month_vol_df['Stock'] == tickerSymbol)).any():
         month_vol_df_filtered = month_vol_df[month_vol_df['Stock'] == tickerSymbol]
         st.write(month_vol_df_filtered[['vol_day_start', 'vol_day_end', 'pos_change', 'Type', 'MDD_perc']])
@@ -124,7 +124,7 @@ def page_settings():
 
     # Volatility Prediction
     st.header('**Volatility Prediction (Quaterly)**')
-    quaterly_vol_df = pd.read_csv('datset/Quaterly_prediction.csv')
+    quaterly_vol_df = pd.read_csv('dataset/Quaterly_prediction.csv')
 
     if ((quaterly_vol_df['Stock'] == tickerSymbol)).any():
         month_vol_df_filtered = quaterly_vol_df[quaterly_vol_df['Stock'] == tickerSymbol]

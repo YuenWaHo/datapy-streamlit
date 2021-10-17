@@ -6,7 +6,9 @@ import cufflinks as cf
 import datetime
 import pyrebase
 import matplotlib.pyplot as plt
-import option_interest
+from sklearn.linear_model import LinearRegression
+import plotly.express as px
+from yfinance import ticker
 
 st.set_page_config(
     page_title="DataPy - Stock Volatility App",
@@ -192,7 +194,7 @@ def page_login():
             # user = auth.sign_in_with_email_and_password(email,password)
         st.sidebar.write("Login successful!")
         bio = st.sidebar.radio('Jump to',['Backtest Summary 回測總結', 'Backtest Results 回測結果', 
-        'Multiple stocks', 'Open Interest 期權資金流'], key='loggedin')
+        'Multiple stocks', 'Prediction 個股預測','Open Interest 期權資金流', 'Tsang Channel 曾氏通道'], key='loggedin')
         if bio == 'Backtest Summary 回測總結':
             backtest_summary('success')
         elif bio =='Backtest Results 回測結果':
@@ -201,6 +203,10 @@ def page_login():
             page_select_stock('success')
         elif bio == 'Open Interest 期權資金流':
             open_interest('success')
+        elif bio == 'Tsang Channel 曾氏通道':
+            tsang_channel('success')
+        elif bio == 'Prediction 個股預測':
+            indv_stock_pred('success')
         #     page_backtest_results('success')
         # elif bio == 'Data':
         #     page_data('success')
@@ -213,50 +219,29 @@ def page_login():
         #         page_data('failed')
 
 def backtest_summary(status):
+    range_select = st.sidebar.selectbox('Range', ['100%', '90%'], key='range_select')
+
     col1, col2, col3 = st.columns(3)
 
     col1.subheader('Winning Probability')
-    win_rate_select = col1.slider('', min_value=70, max_value=100)
+    win_rate_select = col1.slider('', min_value=0, max_value=100, key='win_rate_select')
     col3.subheader('Rank by')
-    sort_by_select = col3.selectbox('', ['Win Rate', 'Mean Volatility (%)', 'Win Rate Rank', 'Target Range Rank','Volume Rank','Total Score', 'EV'])
+    sort_by_select = col3.selectbox('', ['Win Rate', 'Mean Volatility (%)', 'Win Rate Rank','Options Vol', 'Target Range Rank','Volume Rank','Total Score', 'EV'])
     col2.subheader('Expected Value')
     ev_select = col2.slider('', min_value=0, max_value=100)
 
-    backtest_master_df = pd.read_csv('dataset/backtest_summary.csv')
+    opt_volume_box = st.checkbox("Option Volume not zero")
+
+    backtest_master_df = pd.read_csv('dataset/backtest_summary_{}.csv'.format(range_select))
     backtest_master_df['Win_Rate'] = backtest_master_df['Win_Rate'] * 100
     backtest_master_df = backtest_master_df[['stock', 'W','L','Min_vol', 'Win_Rate','Options Vol', 'WR_rank','TR_rank','Vol_rank','Total_score','EV']]
     backtest_master_df.columns = ['Stock', 'W','L','Mean Volatility (%)', 'Win Rate','Options Vol', 'Win Rate Rank','Target Range Rank','Volume Rank','Total Score','EV']
     display_df = backtest_master_df[(backtest_master_df['Win Rate']>=win_rate_select) & (backtest_master_df['EV']>=ev_select)].sort_values(sort_by_select, ascending=False)   
-    st.table(display_df.assign(hack='').set_index('hack'))
+    if opt_volume_box:
+        st.table(display_df[display_df['Options Vol']>0].assign(hack='').set_index('hack'))
+    else:
+        st.table(display_df.assign(hack='').set_index('hack'))
 
-def page_backtest_results(status):
-    backtest_master_df = pd.read_csv('dataset/backtest_summary.csv').sort_values('stock', ascending=True)
-    stock_list = backtest_master_df['stock'].unique()
-    stock_selected = st.selectbox('Select', (stock_list), key='option_select')
-    st.write('Stock select:', stock_selected)
-    status == 'success'
-    if status == 'success':
-        st.write('**Backtest Volatility Results**')
-        backtest_df = pd.read_csv('dataset/backtest_summary.csv')
-        backtest_df = backtest_df[backtest_df['stock'] == (stock_selected)]
-        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank', 'TR_rank','Vol_rank','Total_score','EV']]
-        st.dataframe(backtest_df)
-
-        df = pd.read_csv('backtest_report/{}_20yr_pos_change_backtest.csv'.format(stock_selected))
-        st.write('Target Volatility')
-        gen_backtest_report(df, 'm1', '100%')[2]
-        st.write('Month Volatility')
-        gen_backtest_report(df, 'm1', '100%')[1]
-        st.write('Backtest Result')
-        gen_backtest_report(df, 'm1', '100%')[0]
-    elif status == 'failed':
-        st.write('**Backtest Volatility Results**')
-        backtest_df = pd.read_csv('dataset/backtest_summary.csv')
-        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank',
-        'TR_rank','Vol_rank','Total_score','EV']]
-        backtest_df = backtest_df[backtest_df['stock'] == 'AMD']
-        st.dataframe(backtest_df)
-        
 def page_data(status):
     # Retrieving tickers data
     if status == 'success':
@@ -264,12 +249,12 @@ def page_data(status):
     elif status == 'failed':
         ticker_list = pd.read_csv('dataset/prediction_list_trial.txt')
 
-    # ticker_list = pd.read_csv('prediction_list.txt')
+    # Sidebar
+    st.sidebar.subheader('Query parameters')
     ticket_list = ticker_list.sort_values('Stock', ascending=True, axis=0, inplace=True)
     tickerSymbol = st.sidebar.selectbox('Stock Ticker Symbol', ticker_list['Stock']) # Select ticker symbol
     st.sidebar.write('Stock select:', tickerSymbol)
-    # Sidebar
-    st.sidebar.subheader('Query parameters')
+    range_select = st.sidebar.selectbox('Range', ['100%', '90%'], key='range_select')
     start_date = st.sidebar.date_input("Start date", datetime.date(2020, 1, 1))
     end_date = st.sidebar.date_input("End date", datetime.date(2021, 9, 21))
     tickerData = yf.Ticker(tickerSymbol) # Get ticker data
@@ -278,21 +263,24 @@ def page_data(status):
     # Ticker information
     col1, col2 = st.columns(2)
 
-    string_name = tickerData.info['longName']
-    string_industry = 'Industry: ' + tickerData.info['industry']
-    string_sector =   'Sector  :' + tickerData.info['sector']
-    col1.header('**%s**' % string_name)
-    col1.markdown(string_industry)
-    col1.markdown(string_sector)
+    if tickerSymbol.startswith('^'):
+        st.write(tickerSymbol)
+    else:
+        string_name = tickerData.info['longName']
+        string_industry = 'Industry: ' + tickerData.info['industry']
+        string_sector =   'Sector  :' + tickerData.info['sector']
+        col1.header('**%s**' % string_name)
+        col1.markdown(string_industry)
+        col1.markdown(string_sector)
 
-    string_logo = '<img src=%s>' % tickerData.info['logo_url']
-    col2.markdown(string_logo, unsafe_allow_html=True)
+        string_logo = '<img src=%s>' % tickerData.info['logo_url']
+        col2.markdown(string_logo, unsafe_allow_html=True)
 
     # ------------------------------------
     # Volatility Backtest Result
     # ------------------------------------
     st.header('**Volatility Backtest Result**')
-    vol_backtest_df = pd.read_csv('dataset/backtest_summary.csv')
+    vol_backtest_df = pd.read_csv('dataset/backtest_summary_{}.csv'.format(range_select))
     if ((vol_backtest_df['stock'] == tickerSymbol)).any():
         month_vol_df_filtered = vol_backtest_df[vol_backtest_df['stock'] == tickerSymbol]
         st.write(month_vol_df_filtered[['Win_Rate', 'Min_vol', 'TR_rank', 'Vol_rank', 'Total_score' ,'EV']])
@@ -330,11 +318,11 @@ def page_data(status):
 
         df = pd.read_csv('backtest_report/{}_20yr_pos_change_backtest.csv'.format(tickerSymbol))
         st.write('Target Volatility')
-        gen_backtest_report(df, 'm1', '100%')[2]
+        gen_backtest_report(df, 'm1', range_select)[2]
         st.write('Month Volatility')
-        gen_backtest_report(df, 'm1', '100%')[1]
+        gen_backtest_report(df, 'm1', range_select)[1]
         st.write('Backtest Result')
-        gen_backtest_report(df, 'm1', '100%')[0]
+        gen_backtest_report(df, 'm1', range_select)[0]
     elif status == 'failed':
         st.write('**Backtest Volatility Results**')
         backtest_df = pd.read_csv('dataset/backtest_summary.csv')
@@ -352,12 +340,147 @@ def page_data(status):
     fig = qf.iplot(asFigure=True)
     st.plotly_chart(fig)
 
-    string_summary = tickerData.info['longBusinessSummary']
-    st.info(string_summary)
-    st.write('---')
+    if tickerSymbol.startswith('^'):
+        pass
+    else:
+        string_summary = tickerData.info['longBusinessSummary']
+        st.info(string_summary)
+        st.write('---')
+
+def page_backtest_results(status):
+    backtest_master_df = pd.read_csv('dataset/backtest_summary.csv').sort_values('stock', ascending=True)
+    stock_list = backtest_master_df['stock'].unique()
+    stock_selected = st.selectbox('Select', (stock_list), key='option_select')
+
+    st.write('Stock select:', stock_selected)
+    status == 'success'
+    if status == 'success':
+        st.write('**Backtest Volatility Results**')
+        backtest_df = pd.read_csv('dataset/backtest_summary_{}.csv'.format(range_select))
+        backtest_df = backtest_df[backtest_df['stock'] == (stock_selected)]
+        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank', 'TR_rank','Vol_rank','Total_score','EV']]
+        st.dataframe(backtest_df)
+
+        df = pd.read_csv('backtest_report/{}_20yr_pos_change_backtest.csv'.format(stock_selected))
+        st.write('Target Volatility')
+        gen_backtest_report(df, 'm1', '100%')[2]
+        st.write('Month Volatility')
+        gen_backtest_report(df, 'm1', '100%')[1]
+        st.write('Backtest Result')
+        gen_backtest_report(df, 'm1', '100%')[0]
+    elif status == 'failed':
+        st.write('**Backtest Volatility Results**')
+        backtest_df = pd.read_csv('dataset/backtest_summary.csv')
+        backtest_df = backtest_df[['stock','W','L','Min_vol', 'Win_Rate','Options Vol','Imp Vol','WR_rank',
+        'TR_rank','Vol_rank','Total_score','EV']]
+        backtest_df = backtest_df[backtest_df['stock'] == 'AMD']
+        st.dataframe(backtest_df)
+
+def indv_stock_pred(status):
+    # Retrieving tickers data
+    if status == 'success':
+        ticker_list = pd.read_csv('dataset/prediction_list.txt')
+    elif status == 'failed':
+        ticker_list = pd.read_csv('dataset/prediction_list_trial.txt')
+    # Sidebar
+    st.sidebar.subheader('Query parameters')
+    # ticker_list = pd.read_csv('prediction_list.txt')
+    ticket_list = ticker_list.sort_values('Stock', ascending=True, axis=0, inplace=True)
+    tickerSymbol = st.sidebar.selectbox('Stock Ticker Symbol', ticker_list['Stock']) # Select ticker symbol
+    st.sidebar.write('Stock select:', tickerSymbol)
+    month_vol_df = pd.read_csv('dataset/Monthly_prediction.csv')
+    month_vol_df['Type'] = month_vol_df['Type'].str.replace(r'_m1', '')
+    month_query_list = month_vol_df['Type'].unique()
+    month_query = st.sidebar.selectbox('Select', (month_query_list), key='month_query_select')
+
+    tickerData = yf.Ticker(tickerSymbol) # Get ticker data
+
+    if tickerSymbol.startswith('^'):
+        st.write(tickerSymbol)
+    else:
+        col1, col2 = st.columns(2)
+        string_name = tickerData.info['longName']
+        string_industry = 'Industry: ' + tickerData.info['industry']
+        string_sector =   'Sector  :' + tickerData.info['sector']
+        col1.header('**%s**' % string_name)
+        col1.write(string_industry)
+        col1.write(string_sector)
+
+    # ------------------------------------
+    # Volatility Backtest Result
+    # ------------------------------------
+    st.header('**Volatility Backtest Result**')
+    vol_backtest_df = pd.read_csv('dataset/backtest_summary_100%.csv')
+    if ((vol_backtest_df['stock'] == tickerSymbol)).any():
+        backtest_vol_df_filtered = vol_backtest_df[vol_backtest_df['stock'] == tickerSymbol]
+        st.write(backtest_vol_df_filtered[['Win_Rate', 'Min_vol', 'TR_rank', 'Vol_rank', 'Total_score' ,'EV']])
+    else:
+        st.write('Historic backtest not available.')
+    # ------------------------------------
+    # Volatility Prediction (Monthly)
+    # ------------------------------------
+    month_query = month_query + '_m1'
+    st.header('**Volatility Prediction (Monthly)**')
+    month_vol_df = pd.read_csv('dataset/Monthly_prediction.csv')
+    if ((month_vol_df['Stock'] == tickerSymbol)).any():
+        month_vol_df_filtered = month_vol_df[(month_vol_df['Stock'] == tickerSymbol) & (month_vol_df['Type'] == month_query)]
+        col1, col2 = st.columns(2)
+        col1.markdown('''
+        [ {} from {} to {} ] \n
+        Winning rate of {} is {:.2f}%. \n
+        Based on volatility backtest with 20 years of data \n
+        Will increase {:.2f}% from {} (Low). \n
+        There was a maximum draw down of {:.2f}%.
+        '''.format(tickerSymbol, month_vol_df_filtered.iloc[0]['vol_day_start'], month_vol_df_filtered.iloc[0]['vol_day_end'], 
+        tickerSymbol, backtest_vol_df_filtered.iloc[0]['Win_Rate']*100,
+        month_vol_df_filtered.iloc[0]['pos_change'], month_vol_df_filtered.iloc[0]['vol_day_start'],
+        month_vol_df_filtered.iloc[0]['MDD_perc']))
+
+        col2.markdown('''
+        [ {} {} to {} ] \n
+        以16-20年60個月回測的結果: 勝率為 {:.2f}%. \n
+        {} 將會由 {} 低位上升 {:.2f}%. \n
+        過去10年此段期間之最大回撤率為 {:.2f}%.
+        '''.format(tickerSymbol, month_vol_df_filtered.iloc[0]['vol_day_start'], month_vol_df_filtered.iloc[0]['vol_day_end'], 
+        backtest_vol_df_filtered.iloc[0]['Win_Rate']*100,
+        tickerSymbol, month_vol_df_filtered.iloc[0]['vol_day_start'], month_vol_df_filtered.iloc[0]['pos_change'], 
+        month_vol_df_filtered.iloc[0]['MDD_perc']))
+    else:
+        st.write('Historic volatility not available.')
+    # ------------------------------------
+    # Volatility Prediction
+    # ------------------------------------
+    st.header('**Volatility Prediction (Quaterly)**')
+    quaterly_vol_df = pd.read_csv('dataset/Quaterly_prediction.csv')
+
+    if ((quaterly_vol_df['Stock'] == tickerSymbol)).any():
+        month_vol_df_filtered = quaterly_vol_df[quaterly_vol_df['Stock'] == tickerSymbol]
+        st.write(month_vol_df_filtered[['vol_day_start', 'vol_day_end', 'pos_change', 'Type', 'MDD_perc']])
+    else:
+        st.write('Historic volatility not available.')
 
 def page_select_stock(status):
-    st.write('Page under construction')
+    # st.write('Page under construction')
+    col1, col2, col3 = st.columns(3)
+    start_date = col1.text_input('Start Date', '10-15')
+    end_date = col2.text_input('End Date', '10-24')
+    sort_by_metric = col3.selectbox('Rank by', ['pos_change','Win Rate','Win Rate Rank', 'Target Range Rank','Volume Rank','Total Score', 'EV'])
+    opt_volume_box = st.checkbox("Option Volume not zero")
+
+    month_vol_df = pd.read_csv('dataset/Monthly_prediction.csv')
+    month_result = month_vol_df[(month_vol_df['vol_day_start']>=start_date) & (month_vol_df['vol_day_start']<=end_date)]
+    diplay_df1 = month_result[['Stock', 'vol_day_start', 'vol_day_end', 'pos_change']]
+    backtest_master_df = pd.read_csv('dataset/backtest_summary.csv')
+    backtest_master_df['Win_Rate'] = backtest_master_df['Win_Rate'] * 100
+    backtest_master_df = backtest_master_df[['stock', 'Win_Rate','Options Vol', 'WR_rank','TR_rank','Vol_rank','Total_score','EV']]
+    backtest_master_df.columns = ['Stock', 'Win Rate','Options Vol', 'Win Rate Rank','Target Range Rank','Volume Rank','Total Score','EV']
+
+    display_df = pd.merge(diplay_df1, backtest_master_df, on='Stock')
+    if opt_volume_box:
+        st.table(display_df[display_df['Options Vol']>0].sort_values(sort_by_metric, ascending=False))
+    else:
+        st.table(display_df.sort_values(sort_by_metric, ascending=False))
+    # st.dataframe(display_df[['Stock', 'vol_day_start', 'vol_day_end', 'pos_change']])
 
 def open_interest(status):
     st.markdown('''
@@ -400,6 +523,46 @@ def open_interest(status):
     ax.set_title(f'{stock} Option Open Interest for {date}', size=18)
     ax.tick_params(axis='both', which='major', labelsize=15)
     st.pyplot(fig)
+
+def tsang_channel(status):
+    stock = st.text_input('Stock', 'AAPL')
+    period = st.selectbox('Period', ['5y', '2y', '1y', '20y', '10y'])
+    # stock = stock
+    ticker = yf.Ticker(stock)
+    ticker_df = ticker.history(period=period)
+
+    ticker_df['date'] = ticker_df.index
+    ticker_df = ticker_df.reset_index()
+    ticker_df['row_id'] = ticker_df.index
+
+    x = ticker_df[['row_id']]
+    y = ticker_df[['Close']]
+    lr = LinearRegression().fit(x, y)
+    ticker_df['intercept'] = float(lr.intercept_)
+    ticker_df['slope'] = float(lr.coef_)
+    ticker_df['TL'] = ticker_df['intercept'] + ticker_df['slope'] * ticker_df['row_id']
+    ticker_df['H'] = ticker_df['Close'] - ticker_df['TL']
+    ticker_df['H_std'] = ticker_df['H'].std()
+    ticker_df['H1'] = ticker_df['TL'] + ticker_df['H_std'] * 2
+    ticker_df['H2'] = ticker_df['TL'] + ticker_df['H_std'] * 1
+    ticker_df['H3'] = ticker_df['TL'] - ticker_df['H_std'] * 1
+    ticker_df['H4'] = ticker_df['TL'] - ticker_df['H_std'] * 2
+    ax, fig = plt.subplots()
+    plt.figure(figsize=(12, 5))
+    # px.line(ticker_df['date'], y, color='black')
+    # plt.plot(ticker_df['date'], y, color='black')
+    # plt.plot(ticker_df['date'], ticker_df['H1'], color = 'red')
+    # plt.plot(ticker_df['date'], ticker_df['H2'] , color = 'orange')
+    # plt.plot(ticker_df['date'], ticker_df['TL'] , color = 'blue')
+    # plt.plot(ticker_df['date'], ticker_df['H3'] , color = 'cyan')
+    # plt.plot(ticker_df['date'], ticker_df['H4'] , color = 'green')
+    # plt.title('Tsangs Channel on {} for the past 10 years'.format(stock))
+    # st.pyplot(fig=plt)
+    import plotly.io as pio
+    pio.templates.default = "plotly_dark"
+    fig = px.line(ticker_df, x="date", y=["Close", 'H1' ,'H2', 'TL', 'H3', 'H4'], width=1200, height=800)
+    # fig.update_layout(margin=dict(l=10, r=10, t=50, b=50))
+    st.plotly_chart(fig)
 
 if __name__ == "__main__":
     main()

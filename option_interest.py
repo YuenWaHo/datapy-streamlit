@@ -17,7 +17,7 @@ def opt_int_graph(stock, date):
     todays_data = ticker.history(period='1d')
     today_price = todays_data['Close'][0]
 
-    fig, ax = plt.subplots(figsize=(12, 9), dpi=80)
+    fig, ax = plt.subplots(figsize=(12, 9))
     opt_final = pd.merge(opt.calls, opt.puts, on='strike')
     opt_final = opt_final[['strike', 'openInterest_x', 'openInterest_y']]
     opt_final.columns = ['strike', 'calls', 'puts']
@@ -42,5 +42,4 @@ def opt_int_graph(stock, date):
     plt.legend(prop={'size': 13}, bbox_to_anchor=(1.0, 1), loc='best')
     ax.set_title(f'{stock} Option Open Interest for {date}', size=18)
     ax.tick_params(axis='both', which='major', labelsize=15)
-    plt.tight_layout()
     return fig

@@ -4,3 +4,7 @@
 2,MU
 3,MSFT
 4,AMD
+5,^HSI
+6,^HSCE
+7,^IXIC
+8,^GSPC

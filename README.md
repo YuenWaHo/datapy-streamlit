@@ -1,5 +1,4 @@
 # datapy-streamlit
-streamlit
 
 This platform provides stock historical volatility analysis. The calculation is within a specified period (typically the next Monday trailing the end date of the option expiry date to the next option 
 expiry date) and calculate the minimum increase in stock price in the past 20 years. The target ranges of positive increase include the 100% range (minimum positive increase in all 20 years) 

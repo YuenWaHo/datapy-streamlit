@@ -3,7 +3,7 @@ yfinance==0.1.63
 pandas==1.2.3
 cufflinks==0.17.3
 datetime
-pyrebase==3.0.27
+# pyrebase==3.0.27
 matplotlib==3.4.1
 scikit-learn==1.0
 plotly==4.14.3

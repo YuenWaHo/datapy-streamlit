@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import cufflinks as cf
 import datetime
-import pyrebase
+# import pyrebase
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import plotly.express as px
@@ -32,20 +32,20 @@ def main():
     pages[page]()
 
 # Configuration Key
-firebaseConfig = {
-  'apiKey': "AIzaSyA12g3rx8S-KQbCJlMQPVuGqAMC7OVUxjY",
-  'authDomain': "datapy-stockvol.firebaseapp.com",
-  'projectId': "datapy-stockvol",
-  'storageBucket': "datapy-stockvol.appspot.com",
-  'messagingSenderId': "320588079812",
-  'appId': "1:320588079812:web:5396b281363526590c1f91",
-  'measurementId': "G-9R9V43VH75",
-  'databaseURL':'https://datapy-stockvol-default-rtdb.asia-southeast1.firebasedatabase.app/'
-}
+# firebaseConfig = {
+#   'apiKey': "AIzaSyA12g3rx8S-KQbCJlMQPVuGqAMC7OVUxjY",
+#   'authDomain': "datapy-stockvol.firebaseapp.com",
+#   'projectId': "datapy-stockvol",
+#   'storageBucket': "datapy-stockvol.appspot.com",
+#   'messagingSenderId': "320588079812",
+#   'appId': "1:320588079812:web:5396b281363526590c1f91",
+#   'measurementId': "G-9R9V43VH75",
+#   'databaseURL':'https://datapy-stockvol-default-rtdb.asia-southeast1.firebasedatabase.app/'
+# }
 
 # Firebase Authentication
-firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
+# firebase = pyrebase.initialize_app(firebaseConfig)
+# auth = firebase.auth()
 
 def set_align_for_column(table, col, align="center"):
     cells = [key for key in table._cells if key[1] == col]

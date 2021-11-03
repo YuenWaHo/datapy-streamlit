@@ -546,6 +546,7 @@ def tsang_channel(status):
     ticker_df['slope'] = float(lr.coef_)
     ticker_df['TL'] = ticker_df['intercept'] + ticker_df['slope'] * ticker_df['row_id']
     ticker_df['H'] = np.log2(ticker_df['Close']) - ticker_df['TL']
+    ticker_df['log_close'] = np.log2(ticker_df['Close'])
     ticker_df['H_std'] = ticker_df['H'].std()
     ticker_df['H1'] = ticker_df['TL'] + ticker_df['H_std'] * sd_level2
     ticker_df['H2'] = ticker_df['TL'] + ticker_df['H_std'] * sd_level
@@ -564,7 +565,7 @@ def tsang_channel(status):
     # st.pyplot(fig=plt)
     import plotly.io as pio
     pio.templates.default = "plotly_dark"
-    fig = px.line(ticker_df, x="date", y=["Close", 'H1' ,'H2', 'TL', 'H3', 'H4'], width=1200, height=800)
+    fig = px.line(ticker_df, x="date", y=["log_close", 'H1' ,'H2', 'TL', 'H3', 'H4'], width=1200, height=800)
     # fig.update_layout(margin=dict(l=10, r=10, t=50, b=50))
     st.plotly_chart(fig)
 

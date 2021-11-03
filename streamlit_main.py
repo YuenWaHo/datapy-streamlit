@@ -8,7 +8,6 @@ import pyrebase
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import plotly.express as px
-from yfinance import ticker
 
 st.set_page_config(
     page_title="DataPy - Stock Volatility App",
@@ -207,7 +206,6 @@ def page_login():
             tsang_channel('success')
         elif bio == 'Prediction 個股預測':
             indv_stock_pred('success')
-        #     page_backtest_results('success')
         # elif bio == 'Data':
         #     page_data('success')
         # except:
@@ -217,6 +215,10 @@ def page_login():
         #         page_backtest_results('failed')
         #     elif bio == 'Data':
         #         page_data('failed')
+        #     elif bio == 'Open Interest 期權資金流':
+        #     open_interest('success')
+        #     elif bio == 'Tsang Channel 曾氏通道':
+        #         tsang_channel('success')
 
 def backtest_summary(status):
     range_select = st.sidebar.selectbox('Range', ['100%', '90%'], key='range_select')
@@ -527,6 +529,8 @@ def open_interest(status):
 def tsang_channel(status):
     stock = st.text_input('Stock', 'AAPL')
     period = st.selectbox('Period', ['5y', '2y', '1y', '20y', '10y'])
+    sd_level = st.number_input('SD level')
+    sd_level2 = st.number_input('SD level2')
     # stock = stock
     ticker = yf.Ticker(stock)
     ticker_df = ticker.history(period=period)
@@ -536,17 +540,17 @@ def tsang_channel(status):
     ticker_df['row_id'] = ticker_df.index
 
     x = ticker_df[['row_id']]
-    y = ticker_df[['Close']]
+    y = np.log2(ticker_df[['Close']])
     lr = LinearRegression().fit(x, y)
     ticker_df['intercept'] = float(lr.intercept_)
     ticker_df['slope'] = float(lr.coef_)
     ticker_df['TL'] = ticker_df['intercept'] + ticker_df['slope'] * ticker_df['row_id']
-    ticker_df['H'] = ticker_df['Close'] - ticker_df['TL']
+    ticker_df['H'] = np.log2(ticker_df['Close']) - ticker_df['TL']
     ticker_df['H_std'] = ticker_df['H'].std()
-    ticker_df['H1'] = ticker_df['TL'] + ticker_df['H_std'] * 2
-    ticker_df['H2'] = ticker_df['TL'] + ticker_df['H_std'] * 1
-    ticker_df['H3'] = ticker_df['TL'] - ticker_df['H_std'] * 1
-    ticker_df['H4'] = ticker_df['TL'] - ticker_df['H_std'] * 2
+    ticker_df['H1'] = ticker_df['TL'] + ticker_df['H_std'] * sd_level2
+    ticker_df['H2'] = ticker_df['TL'] + ticker_df['H_std'] * sd_level
+    ticker_df['H3'] = ticker_df['TL'] - ticker_df['H_std'] * sd_level
+    ticker_df['H4'] = ticker_df['TL'] - ticker_df['H_std'] * sd_level2
     ax, fig = plt.subplots()
     plt.figure(figsize=(12, 5))
     # px.line(ticker_df['date'], y, color='black')

@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/415296304.svg)](https://zenodo.org/doi/10.5281/zenodo.11181790)
+
 # datapy-streamlit
 
 This platform provides stock historical volatility analysis. The calculation is within a specified period (typically the next Monday trailing the end date of the option expiry date to the next option 
